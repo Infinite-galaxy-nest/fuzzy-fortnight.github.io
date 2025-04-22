@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Currency Viewer</title>
+    <style>
+        .item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            text-align: center;
+        }
+        img {
+            max-width: 100px;
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="source">Source:</label>
+        <select id="source"></select>
+        
+        <label for="destination">Destination:</label>
+        <select id="destination"></select>
+        
+        <button onclick="swapImage()">Swap Image</button>
+        <button onclick="swapCaption()">Swap Caption</button>
+        <button onclick="swapDescription()">Swap Description</button>
+        <button onclick="swapAmount()">Swap Amount</button>
+    </div>
+    
+    <div id="content"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const imageResponse = await fetch("images.json");
+            const textResponse = await fetch("text.json");
+            const currencyResponse = await fetch("currency_data.json");
+
+            let images = await imageResponse.json();
+            let texts = await textResponse.json();
+            let currencies = await currencyResponse.json();
+
+            const contentDiv = document.getElementById("content");
+            const sourceDropdown = document.getElementById("source");
+            const destinationDropdown = document.getElementById("destination");
+
+            function populateDropdowns() {
+                sourceDropdown.innerHTML = destinationDropdown.innerHTML = "";
+                images.forEach(image => {
+                    const option = document.createElement("option");
+                    option.value = image.id;
+                    option.textContent = `Image ${image.id}`;
+                    
+                    sourceDropdown.appendChild(option.cloneNode(true));
+                    destinationDropdown.appendChild(option);
+                });
+            }
+
+            function render() {
+                contentDiv.innerHTML = "";
+                images.forEach((image, index) => {
+                    const textObj = texts.find(t => t.id === image.id);
+                    const currencyObj = currencies.Dollar[index] || { Amount: "$0" };
+                    const nairaObj = currencies.Naira[index] || { Amount: "₦0" };
+                    const cediObj = currencies.Cedi[index] || { Amount: "₵0" };
+                    
+                    const div = document.createElement("div");
+                    div.classList.add("item");
+                    div.dataset.id = image.id;
+                    div.innerHTML = `
+                        <img src="${image.src}" alt="Image ${image.id}">
+                        <p class="caption">${textObj.caption}</p>
+                        <p class="description">${textObj.description}</p>
+                        <p class="currency">Dollar: ${currencyObj.Amount}, Naira: ${nairaObj.Amount}, Cedi: ${cediObj.Amount}</p>
+                    `;
+                    contentDiv.appendChild(div);
+                });
+            }
+
+            window.swapImage = function () {
+                swapArrayPositions(images, "src");
+            };
+
+            window.swapCaption = function () {
+                swapTextProperty("caption");
+            };
+
+            window.swapDescription = function () {
+                swapTextProperty("description");
+            };
+
+            window.swapAmount = function () {
+                swapCurrency();
+            };
+
+            function swapArrayPositions(array, key) {
+                const sourceId = parseInt(sourceDropdown.value);
+                const destinationId = parseInt(destinationDropdown.value);
+
+                if (sourceId === destinationId) {
+                    alert("Source and Destination must be different.");
+                    return;
+                }
+
+                const sourceIndex = images.findIndex(img => img.id === sourceId);
+                const destIndex = images.findIndex(img => img.id === destinationId);
+
+                if (sourceIndex !== -1 && destIndex !== -1) {
+                    [array[sourceIndex][key], array[destIndex][key]] = [array[destIndex][key], array[sourceIndex][key]];
+                    render();
+                }
+            }
+
+            function swapTextProperty(property) {
+                const sourceId = parseInt(sourceDropdown.value);
+                const destinationId = parseInt(destinationDropdown.value);
+
+                if (sourceId === destinationId) {
+                    alert("Source and Destination must be different.");
+                    return;
+                }
+
+                const sourceText = texts.find(t => t.id === sourceId);
+                const destText = texts.find(t => t.id === destinationId);
+
+                if (sourceText && destText) {
+                    [sourceText[property], destText[property]] = [destText[property], sourceText[property]];
+                    render();
+                }
+            }
+
+            function swapCurrency() {
+                const sourceId = parseInt(sourceDropdown.value);
+                const destinationId = parseInt(destinationDropdown.value);
+
+                if (sourceId === destinationId) {
+                    alert("Source and Destination must be different.");
+                    return;
+                }
+
+                const sourceIndex = images.findIndex(img => img.id === sourceId);
+                const destIndex = images.findIndex(img => img.id === destinationId);
+
+                if (sourceIndex !== -1 && destIndex !== -1) {
+                    [currencies.Dollar[sourceIndex].Amount, currencies.Dollar[destIndex].Amount] =
+                        [currencies.Dollar[destIndex].Amount, currencies.Dollar[sourceIndex].Amount];
+
+                    [currencies.Naira[sourceIndex].Amount, currencies.Naira[destIndex].Amount] =
+                        [currencies.Naira[destIndex].Amount, currencies.Naira[sourceIndex].Amount];
+
+                    [currencies.Cedi[sourceIndex].Amount, currencies.Cedi[destIndex].Amount] =
+                        [currencies.Cedi[destIndex].Amount, currencies.Cedi[sourceIndex].Amount];
+
+                    render();
+                }
+            }
+
+            populateDropdowns();
+            render();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Text Swap</title>
+    <style>
+        .container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .item { text-align: center; width: 250px; }
+        img { width: 200px; height: 150px; border: 2px solid black; cursor: pointer; }
+        .caption { font-weight: bold; margin-top: 5px; }
+        .description { font-style: italic; color: gray; }
+        .controls { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div id="content" class="container"></div>
+
+    <div class="controls">
+        <label for="source">Source Image:</label>
+        <select id="source"></select>
+
+        <label for="destination">Destination Image:</label>
+        <select id="destination"></select>
+
+        <button onclick="swapText()">Swap Text</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
